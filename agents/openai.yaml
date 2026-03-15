@@ -1,0 +1,3 @@
+interface:
+  display_name: "PM Project Orchestrator"
+  short_description: "Guide nontechnical PMs from idea to architecture, prototype, build tracking, testing, and delivery."
