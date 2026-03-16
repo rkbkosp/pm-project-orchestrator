@@ -1,3 +1,4 @@
 interface:
   display_name: "PM Project Orchestrator"
-  short_description: "Guide nontechnical PMs from idea to architecture, prototype, build tracking, testing, and delivery."
+  short_description: "Run complex PM-led builds with a stable control panel."
+  default_prompt: "Use $pm-project-orchestrator to plan a product build and maintain a full project-state task tree, artifact log, and decision tracking."

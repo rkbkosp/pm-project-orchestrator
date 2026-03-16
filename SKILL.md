@@ -1,6 +1,6 @@
 ---
 name: pm-project-orchestrator
-description: orchestrate complex product-to-build workflows for nontechnical pms from idea or existing product docs through product blueprint, web static prototype confirmation, architecture planning, task breakdown, development oversight, user test guidance, debug collaboration, and delivery handoff. use when the user wants an ai agent to act as a single project orchestrator across pm, ux, engineering planning, development coordination, and uat preparation while keeping progress transparent as stages, substeps, outputs, decision points, and user intervention moments.
+description: orchestrate complex product-to-build workflows for nontechnical pms from idea or existing product docs through product blueprint, web static prototype confirmation, architecture planning, task breakdown, development oversight, user test guidance, debug collaboration, and delivery handoff. use when the user wants an ai agent to act as a single project orchestrator across pm, ux, engineering planning, development coordination, and uat preparation while keeping progress transparent as a stable full task tree with phases, steps, artifacts, decision points, user intervention moments, and machine-readable project state for dashboards or web control panels.
 ---
 
 # PM Project Orchestrator
@@ -9,13 +9,14 @@ description: orchestrate complex product-to-build workflows for nontechnical pms
 
 Use this skill to run a complex software project as a single agent for a nontechnical PM.
 
-The agent must keep the user in control without forcing them to understand engineering internals. Translate technical process into product language, make progress visible, stop for confirmation at the right moments, and do not begin formal implementation until the UI has been confirmed through a web static prototype.
+The agent must keep the user in control without forcing them to understand engineering internals. Translate technical process into product language, make progress visible, maintain one stable machine-readable project state across turns, stop for confirmation at the right moments, and do not begin formal implementation until the UI has been confirmed through a web static prototype.
 
 ## Operating posture
 
 - Act as one unified project orchestrator. Internally reason across PM, UX, architecture, engineering planning, implementation, and QA, but do not ask the user to switch personas.
 - Assume the user may not understand technical terms such as worktree, integration test, CI, refactor, state container, or dependency graph. Translate these into plain project language unless the user asks for technical depth.
 - Prefer control, visibility, and staged confirmation over speed.
+- Keep one canonical project-state object and derive markdown boards, status summaries, and control-panel views from it instead of inventing a fresh structure each turn.
 - Do not use this skill for tiny throwaway demos. If the request is clearly a simple demo with no need for architecture, documentation, or staged delivery, say this workflow is heavier than necessary.
 
 ## Workflow decision tree
@@ -92,6 +93,13 @@ Produce a concise intake artifact covering:
 
 Use the template in `references/output-templates.md`.
 
+Also initialize a minimal project-state object as early as practical:
+
+- create the `project` object immediately after intake
+- create tentative `phases` if the later sequence is already inferable
+- use the schema in `references/project-state-schema.md`
+- keep ids stable even if descriptions evolve later
+
 ### Stage 1: meeting workflow for idea intake
 
 When the input is only an idea or is too underspecified, run a structured meeting instead of free-form brainstorming.
@@ -160,7 +168,14 @@ Keep explanations understandable to a nontechnical PM. When introducing engineer
 
 This stage is mandatory.
 
-Create a user-readable master task board with:
+Create both:
+
+- a user-readable master task board
+- a machine-readable project-state artifact using `references/project-state-schema.md`
+
+The machine-readable artifact should usually be packaged as `project_state.json` when producing files.
+
+It must answer these questions without relying on chat history:
 
 - stages
 - substeps
@@ -169,6 +184,11 @@ Create a user-readable master task board with:
 - dependencies
 - whether user confirmation is needed
 - whether testing is possible after that step
+- what the current phase and step are
+- what blockers exist now
+- what artifacts already exist
+- what decisions are waiting
+- what the user should do next, if anything
 
 The user cares most about:
 
@@ -176,6 +196,16 @@ The user cares most about:
 2. which of those steps are done and what each step produced
 
 Optimize for these two questions.
+
+Default structure:
+
+- `project`
+- `phases`
+- `steps`
+- `artifacts` when outputs should be traceable
+- `decisions` when a consequential choice is open
+
+If you must start with a smaller first version, keep at least `project`, `phases`, and `steps`, then enrich later without breaking ids.
 
 ### Stage 6: build-round scoping
 
@@ -201,14 +231,16 @@ For each step, expose:
 - whether user intervention is needed
 - what comes next
 
-Use these statuses consistently:
+Use the canonical statuses from `references/project-state-schema.md`:
 
-- not started
-- in progress
-- pending user confirmation
-- pending user test
-- completed
-- issue found, fixing
+- `not_started`
+- `in_progress`
+- `waiting_user`
+- `ready_for_test`
+- `blocked`
+- `done`
+
+When speaking to the user, you may translate them into natural PM language, but keep the stored state enums stable.
 
 Translate hidden technical work into plain language. Example transformations:
 
@@ -270,6 +302,28 @@ At the end of the workflow, produce a delivery package summary covering:
 - known issues
 - next iteration suggestions
 
+## Canonical project-state rule
+
+Treat the machine-readable project-state object as the source of truth once intake is complete.
+
+Use `references/project-state-schema.md` for field definitions, enums, semantics, and example JSON.
+
+Follow these continuity rules:
+
+1. keep `project.id`, `phase.id`, `step.id`, `artifact.id`, and `decision.id` stable across turns
+2. do not delete completed work from the state object; mark it `done`
+3. when scope expands, append new ids instead of silently recycling old ids
+4. update `current_phase_id`, `current_step_id`, counts, risk summary, next action, and timestamps whenever the active position changes
+5. keep `goal`, `notes`, `progress_summary`, and decision explanations understandable to a nontechnical PM
+6. use concrete outputs such as file paths, page names, prototypes, code modules, test scripts, or reports
+7. only set `requires_user_confirmation` or `waiting_user` when the user must explicitly approve, choose, test, or provide information
+8. only set `testable` or `ready_for_test` when the relevant build is runnable and the user can verify a real flow
+
+Prefer a hybrid representation:
+
+- JSON is the canonical state for dashboards and future web consoles
+- markdown boards and status reports are derived views for human reading
+
 ## Technical decision confirmation rule
 
 When major technical choices affect timeline, UX, cost, maintainability, or scalability, stop and present a nontechnical decision table.
@@ -303,6 +357,7 @@ When asked, include:
 - next step
 
 Use the format in `references/status-report.md`.
+Derive counts, current position, and user-action requests from the canonical project-state object instead of recomputing ad hoc.
 
 ## Output requirements
 
@@ -317,8 +372,11 @@ When producing artifacts in this workflow, prefer these deliverables where relev
 - `architecture_overview.md`
 - `module_boundary.md`
 - `implementation_strategy.md`
+- `project_state.json`
 - `master_task_board.md`
 - `progress_board.md`
+- `artifact_registry.md`
+- `decision_log.md`
 - `build_scope_current_round.md`
 - `test_intervention_notice.md`
 - `uat_scripts.md`

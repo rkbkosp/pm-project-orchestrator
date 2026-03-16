@@ -46,10 +46,43 @@
 - Question
 - Question
 
+Use this markdown view as the human-readable companion to the canonical JSON state in `references/project-state-schema.md`.
+
+## Project control panel summary
+
+| Field | Content |
+|---|---|
+| Project | |
+| Current phase | |
+| Current step | |
+| Overall status | |
+| Total phases | |
+| Total substeps | |
+| Completed substeps | |
+| Needs user attention | |
+| Next action | |
+| Current risk | |
+
 ## Master task board
 
-| ID | Stage | Substep | Goal | Output | Dependency | Status | Needs user confirmation | Testable after step |
-|---|---|---|---|---|---|---|---|---|
+| Phase ID | Step ID | Phase | Substep | Goal | Output | Dependency | Status | User action | Needs user confirmation | Testable after step | Blockers |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+
+## Artifact registry
+
+| Artifact ID | Artifact | Type | Location | Related phase | Related step | Summary |
+|---|---|---|---|---|---|---|
+
+## Decision log
+
+| Decision ID | Decision | Status | Related phase/step | Recommendation | What the user needs to decide |
+|---|---|---|---|---|---|
+
+## Machine-readable state artifact
+
+- Prefer `project_state.json`
+- Follow `references/project-state-schema.md`
+- Keep `project`, `phases`, and `steps` populated even when `artifacts` or `decisions` are empty
 
 ## Build-round scope note
 
