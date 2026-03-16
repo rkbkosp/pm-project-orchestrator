@@ -22,6 +22,8 @@
 
 ## 下载和安装
 
+推荐搭配 [superpower skill](https://github.com/obra/superpowers.git) 使用
+
 ```bash
 git clone https://github.com/rkbkosp/pm-project-orchestrator.git .agents/skills/pm-project-orchestrator
 ```
